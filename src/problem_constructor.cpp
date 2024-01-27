@@ -4,11 +4,15 @@
  *
  * Distributed under terms of the MIT license.
  */
-
-#include <eigen3/Eigen/Dense>
+#include<stdio.h>
+// #include <torch/torch.h>
+// #include <torch/script.h>
+// #include <eigen3/Eigen/Dense>
+#include <Eigen/Dense>
 #include <tuple>
+#include <vector>
+#include <iostream>
 #include <limits>
-
 #include "ott/pybind_box_type.h"
 
 typedef int MSKint32t;
@@ -21,9 +25,52 @@ double LMD_TOL = 1e-4;
 void set_print_level(int level){
     PRINTLEVEL = level;
 }
+// Generate the P matrix for the problem with libtorch
+// std::tuple<torch::Tensor, torch::Tensor, torch::Tensor> construct_P_matrix(double minimize_order, int segment_num, int poly_order, torch::Tensor room_time, torch::Tensor MQM, std::string &type){
+//     int min_order_l = floor(minimize_order);
+//     int min_order_u = ceil (minimize_order);
 
-// Generate the P matrix for the problem
-// type = "l" if lower triangular is wanted; "u" is upper is desired; "f" is full matrix is desired
+//     int NUMQNZ = 0;
+//     int NUMQ_blk = (poly_order + 1);                       // default minimize the jerk and minimize_order = 3
+//     if(type == "f" || type == "F")
+//         NUMQNZ = segment_num * 3 * pow(NUMQ_blk, 2);
+//     else
+//         NUMQNZ = segment_num * 3 * NUMQ_blk * (NUMQ_blk + 1) / 2;
+
+//     torch::Tensor qval = torch::zeros(NUMQNZ, torch::kInt);
+//     torch::Tensor qsubi = torch::zeros(NUMQNZ, torch::kFloat32);
+//     torch::Tensor qsubj = torch::zeros(NUMQNZ, torch::kFloat32);
+
+//     int sub_shift = 0;
+//     int idx = 0;
+//     int s1d1CtrlP_num = poly_order + 1;
+//     int s1CtrlP_num = 3 * s1d1CtrlP_num;
+//     for (int k = 0; k < segment_num; k++)
+//     {
+//         auto scale_k = room_time[k];
+//         for (int p = 0; p < 3; p ++ )
+//             for ( int i = 0; i < s1d1CtrlP_num; i ++ )
+//                 for ( int j = 0; j < s1d1CtrlP_num; j ++ ){
+//                     if(((type == "l" || type == "L") && i >= j) || ((type == "u" || type == "U") && i <= j) || (type == "f" || type == "F")) {
+//                         qsubi[idx] = sub_shift + p * s1d1CtrlP_num + i;
+//                         qsubj[idx] = sub_shift + p * s1d1CtrlP_num + j;
+//                         //qval[idx]  = MQM(i, j) /(double)pow(scale_k, 3);
+//                         if (min_order_l == min_order_u)
+//                             qval[idx]  = MQM[i][j] / pow(scale_k, 2 * min_order_u - 3);
+//                         else
+//                             qval[idx] = ( (minimize_order - min_order_l) / pow(scale_k, 2 * min_order_u - 3)
+//                                           + (min_order_u - minimize_order) / pow(scale_k, 2 * min_order_l - 3) ) * MQM[i][j];
+//                         idx ++ ;
+//                     }
+//                 }
+
+//         sub_shift += s1CtrlP_num;
+//     }
+//     return std::make_tuple(qval, qsubi, qsubj);
+// }
+
+// // Generate the P matrix for the problem
+// // type = "l" if lower triangular is wanted; "u" is upper is desired; "f" is full matrix is desired
 std::tuple<VX, lVX, lVX> construct_P_matrix(double minimize_order, int segment_num, int poly_order, RefVX room_time, RefMX MQM, std::string &type){
     int min_order_l = floor(minimize_order);
     int min_order_u = ceil (minimize_order);
@@ -66,6 +113,7 @@ std::tuple<VX, lVX, lVX> construct_P_matrix(double minimize_order, int segment_n
     }
     return std::make_tuple(qval, qsubi, qsubj);
 }
+
 
 VX gradient_from_P(double minimize_order, int segment_num, int poly_order, RefVX room_time, RefMX MQM, RefVX sol){
     int min_order_l = floor(minimize_order);

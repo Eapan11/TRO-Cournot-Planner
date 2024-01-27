@@ -1,3 +1,4 @@
+cmake_minimum_required(VERSION 3.0 FATAL_ERROR)
 cmake_minimum_required(VERSION 2.8.3)
 project(ott)
 
@@ -12,7 +13,9 @@ message("All Python Libraries will be in ${PROJECT_SOURCE_DIR}")
 
 # detect if on mac or unix, and include Mosek
 set(MOSEK_DIR ${PROJECT_SOURCE_DIR}/third_party/mosek/9/tools/platform)
+set(Torch_DIR /home/yipeng/Bilevel-Planner/libtorch/share/cmake/Torch)
 
+find_package(Torch REQUIRED)
 
 if(${UNIX})
     message("Unix detected!")
@@ -39,10 +42,10 @@ include_directories(${EIGEN3_INCLUDE_DIR})
 pybind11_add_module(ott MODULE src/pybind_wrapper.cpp src/problem_constructor.cpp
         include/ott/pybind_box_type.h include/ott/data_types.h include/ott/TGProblem.h )
 target_link_libraries(ott ${Boost_LIBRARIES})
-
+# target_link_libraries(ott ${TORCH_LIBRARIES})
 set_target_properties(ott PROPERTIES
     LIBRARY_OUTPUT_DIRECTORY  "${PROJECT_SOURCE_DIR}"
        PREFIX "lib")
 
+set_property(TARGET ott PROPERTY CXX_STANDARD 14)
 #add_subdirectory(src/snopt7)
-
